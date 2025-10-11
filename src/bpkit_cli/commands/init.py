@@ -284,7 +284,7 @@ def display_banner() -> None:
 
     Business Plan to Constitution - Spec-Driven MVP Development
     """
-    console.print(banner, style="bold cyan")
+    console.print(banner, style="bold magenta")
 
 
 def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
@@ -385,7 +385,7 @@ def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
 
         # Display tree after successful installation
         console.print(tree)
-        console.print("\n[bold green]Project ready.[/bold green]\n")
+        console.print("\n[bold magenta]Project ready.[/bold magenta]\n")
 
         # Display next steps panel
         if not has_speckit:
@@ -411,16 +411,25 @@ def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
 
         console.print(next_steps)
 
-        # Optional commands panel
-        optional_panel = Panel(
-            "\n  ○ bpkit check - Verify installation\n"
-            "  ○ bpkit decompose --help - See all decomposition options\n"
-            "  ○ bpkit analyze - Validate constitutional consistency\n",
-            title="Optional Commands",
+        # Enhancement commands panel with workflow timing
+        enhancement_panel = Panel(
+            "\n  [bold]Optional commands to improve quality & confidence[/bold]\n\n"
+            "  ○ [yellow]bpkit check[/yellow] (recommended) - Verify BP-Kit installation is complete\n"
+            "    Run after: bpkit init\n\n"
+            "  ○ [yellow]bpkit clarify[/yellow] (optional) - Ask structured questions to resolve pitch deck\n"
+            "    ambiguities and underspecified sections\n"
+            "    Run before: bpkit decompose\n\n"
+            "  ○ [yellow]bpkit analyze[/yellow] (optional) - Cross-artifact consistency & traceability report\n"
+            "    between pitch deck and constitutions\n"
+            "    Run after: bpkit decompose, before /speckit.plan\n\n"
+            "  ○ [yellow]bpkit checklist[/yellow] (optional) - Generate quality validation checklists to verify\n"
+            "    constitutional completeness and clarity\n"
+            "    Run after: bpkit decompose\n",
+            title="Enhancement Commands",
             expand=False
         )
         console.print()
-        console.print(optional_panel)
+        console.print(enhancement_panel)
 
     except InstallationError as e:
         # Rollback already happened in atomic_installation context manager
