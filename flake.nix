@@ -19,6 +19,11 @@
             python.pkgs.pip
           ];
 
+          # Required for binary Python packages like pymupdf
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+            pkgs.stdenv.cc.cc.lib
+          ];
+
           shellHook = ''
             echo "🚀 BP-Kit Development Environment"
             echo "Python: $(python --version)"

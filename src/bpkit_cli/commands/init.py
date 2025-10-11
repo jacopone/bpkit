@@ -367,10 +367,10 @@ def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
                 # Existing Speckit project (US1) - standard summary
                 display_summary(project_name)
 
-    except InstallationError:
+    except InstallationError as e:
         # Rollback already happened in atomic_installation context manager
         console.print(
-            "\\n[bold red]Error:[/bold red] Installation failed and was rolled back."
+            f"\\n[bold red]Error:[/bold red] {e}"
         )
         console.print("\\nRun 'bpkit init' to retry installation.")
         raise typer.Exit(1)
