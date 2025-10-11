@@ -1,0 +1,29 @@
+# Quality Checklist: {{ constitution_name }}
+
+**Constitution**: [{{ constitution_name }}.md](../memory/{{ constitution_name }}.md)
+**Type**: Strategic
+**Generated**: {{ generated_date }}
+
+## Traceability (4 items)
+
+- [ ] All principles have measurable outcomes
+- [ ] Each principle links back to pitch deck section
+- [ ] Version properly tracked in frontmatter
+- [ ] At least 3 downstream features reference this constitution
+
+## Quality (3 items)
+
+- [ ] No implementation details in principles
+- [ ] Principles are testable and unambiguous
+- [ ] Rationale explains 'why' for each principle
+
+## Completeness (3 items)
+
+- [ ] Examples include both compliant and violation cases
+- [ ] Amendment process documented
+- [ ] Review cycle defined
+
+---
+
+**Total Items**: 10
+**Next Step**: Check off items as you validate, then run `/bp.checklist --report` to track progress

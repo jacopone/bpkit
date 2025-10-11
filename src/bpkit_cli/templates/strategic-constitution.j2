@@ -1,0 +1,17 @@
+---
+version: {{ version }}
+type: strategic
+created: {{ created_date }}
+updated: {{ updated_date }}
+source: pitch-deck.md
+pitch_deck_version: {{ pitch_deck_version }}
+---
+
+# {{ constitution_type }} Constitution
+
+**Source**: {% for source in source_sections %}[`pitch-deck.md#{{ source }}`](../deck/pitch-deck.md#{{ source }}){% if not loop.last %}, {% endif %}{% endfor %}
+
+{% for principle in principles %}
+{{ principle.to_markdown(loop.index) }}
+
+{% endfor %}

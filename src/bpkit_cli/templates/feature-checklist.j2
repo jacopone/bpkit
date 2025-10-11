@@ -1,0 +1,34 @@
+# Quality Checklist: {{ constitution_name }}
+
+**Constitution**: [{{ constitution_name }}.md](../features/{{ constitution_name }}.md)
+**Type**: Feature
+**Generated**: {{ generated_date }}
+
+## Traceability (5 items)
+
+- [ ] All user stories have acceptance criteria
+- [ ] Success criteria are measurable and technology-agnostic
+- [ ] Feature links to at least 1 strategic principle
+- [ ] Feature principles (FP1-FPX) all have upstream sources
+- [ ] Version properly tracked in frontmatter
+
+## Quality (5 items)
+
+- [ ] Data model entities are clearly defined
+- [ ] Entity relationships documented
+- [ ] No [NEEDS CLARIFICATION] markers remain
+- [ ] Principles are testable and unambiguous
+- [ ] Security/privacy considerations addressed
+
+## Completeness (5 items)
+
+- [ ] MVP boundaries are explicit (IN/OUT scope)
+- [ ] Dependencies on other features listed
+- [ ] Edge cases identified
+- [ ] Non-functional requirements specified
+- [ ] Ready for /speckit.plan
+
+---
+
+**Total Items**: 15
+**Next Step**: Check off items as you validate, then run `/bp.checklist --report` to track progress

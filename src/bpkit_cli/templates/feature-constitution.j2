@@ -1,0 +1,97 @@
+---
+version: {{ version }}
+type: feature
+created: {{ created_date }}
+updated: {{ updated_date }}
+source: pitch-deck.md
+pitch_deck_version: {{ pitch_deck_version }}
+upstream:
+{% for upstream in upstream_constitutions %}
+  - {{ upstream }}
+{% endfor %}
+---
+
+# Feature {{ feature_id }}: {{ feature_name }}
+
+**Upstream**: {% for upstream in upstream_links %}[`{{ upstream.file }}#{{ upstream.principle_id }}`](../memory/{{ upstream.file }}#{{ upstream.principle_id }}){% if not loop.last %}, {% endif %}{% endfor %}
+
+## User Scenarios & Testing
+
+{% for story in user_stories %}
+### User Story {{ loop.index }} - {{ story.title }} (Priority: {{ story.priority }})
+
+{{ story.description }}
+
+**Acceptance Scenarios**:
+{% for scenario in story.scenarios %}
+{{ loop.index }}. **Given** {{ scenario.given }}, **When** {{ scenario.when }}, **Then** {{ scenario.then }}
+{% endfor %}
+
+{% endfor %}
+
+---
+
+## Key Entities
+
+{% if entities %}
+{% for entity in entities %}
+### {{ entity.name }}
+
+**Source**: {% if entity.source_link %}{{ entity.source_link }}{% else %}Inferred from pitch deck{% endif %}
+
+**Rationale**: {{ entity.rationale }}
+
+Attributes:
+  - [TODO: Define {{ entity.name | lower }} attributes{% if entity.attribute_suggestions %} - suggest: {{ entity.attribute_suggestions }}{% endif %}]
+
+Relationships:
+{% for rel in entity.relationships %}
+  - {{ rel.type }}: {{ rel.target }}{% if rel.description %} ({{ rel.description }}){% endif %}
+{% endfor %}
+
+Constraints:
+  - [TODO: Define validation rules{% if entity.constraint_suggestions %} - suggest: {{ entity.constraint_suggestions }}{% endif %}]
+
+Lifecycle:
+  - States: [TODO: Define {{ entity.name | lower }} states{% if entity.state_suggestions %} - suggest: {{ entity.state_suggestions }}{% endif %}]
+
+{% endfor %}
+{% else %}
+Entity extraction deferred to Speckit planning phase. Run `/speckit.plan --constitution features/{{ feature_id }}-{{ feature_name }}.md` to define domain model.
+{% endif %}
+
+---
+
+## Success Criteria
+
+{% for criterion in success_criteria %}
+- **{{ criterion.id }}**: {{ criterion.text }}
+  - **Source**: {{ criterion.source_link }}
+  - **Type**: {{ criterion.type | upper }}
+{% if criterion.type == 'derived' %}
+  - **Rationale**: {{ criterion.rationale }}
+  - **Test**: {{ criterion.test }}
+{% elif criterion.type == 'placeholder' %}
+  - **Business Goal**: {{ criterion.business_goal }}
+  - **Suggested Approaches**:
+{% for approach in criterion.suggested_approaches %}
+    - {{ approach }}
+{% endfor %}
+  - **Action Required**: Run `/bp.clarify --feature {{ feature_id }}-{{ feature_name }}` or manually specify criterion
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Feature Principles
+
+{% for principle in feature_principles %}
+### Principle {{ loop.index }}: {{ principle.title }}
+
+{{ principle.description }}
+
+**Source**: {{ principle.source_link }}
+
+**Test**: {{ principle.test }}
+{% endfor %}

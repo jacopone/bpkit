@@ -1,0 +1,96 @@
+# Strategic Constitution Contract
+# Defines schema for company, product, market, business constitutions
+
+version: "1.0.0"
+constitution_types:
+  - COMPANY
+  - PRODUCT
+  - MARKET
+  - BUSINESS
+
+schema:
+  frontmatter:
+    version:
+      type: "string"
+      format: "semver"
+      required: true
+      example: "1.0.0"
+    type:
+      type: "string"
+      enum: ["strategic"]
+      required: true
+    created:
+      type: "string"
+      format: "date"
+      required: true
+    updated:
+      type: "string"
+      format: "date"
+      required: true
+    source:
+      type: "string"
+      value: "pitch-deck.md"
+      required: true
+    pitch_deck_version:
+      type: "string"
+      format: "semver"
+      required: true
+
+  content_structure:
+    - section: "title"
+      format: "# {Constitution Type} Constitution"
+      required: true
+
+    - section: "source_link"
+      format: "**Source**: Links to all contributing pitch deck sections"
+      required: true
+      example: "**Source**: [`pitch-deck.md#company-purpose`](../deck/pitch-deck.md#company-purpose), [`pitch-deck.md#problem`](../deck/pitch-deck.md#problem)"
+
+    - section: "principles"
+      format: "## Principle {N}: {Title}\n\n{Description}\n\n**Rationale**: {Why this principle}\n\n**Test**: {How to validate}"
+      required: true
+      min_principles: 1
+      max_principles: 20
+
+  principle_format:
+    id:
+      type: "string"
+      format: "principle-{NNN}"
+      required: true
+    title:
+      type: "string"
+      min_length: 5
+      max_length: 100
+      required: true
+    description:
+      type: "string"
+      min_length: 10
+      required: true
+    rationale:
+      type: "string"
+      min_length: 20
+      required: true
+    test:
+      type: "string"
+      min_length: 10
+      required: true
+    source_section:
+      type: "string"
+      format: "section_id"
+      required: true
+
+validation_rules:
+  - "All principles must have valid source_section links"
+  - "source_section must resolve to pitch deck section"
+  - "No duplicate principle IDs"
+  - "Version must not be older than pitch_deck_version"
+  - "Must contain ≥1 principle"
+
+file_naming:
+  pattern: "{type}-constitution.md"
+  location: ".specify/memory/"
+  examples:
+    - "company-constitution.md"
+    - "product-constitution.md"
+    - "market-constitution.md"
+    - "business-constitution.md"

@@ -1,0 +1,15 @@
+---
+version: {{ version }}
+created: {{ created_date }}
+updated: {{ updated_date }}
+type: pitch-deck
+---
+
+# {{ project_name }} Pitch Deck
+
+{% for section in sections %}
+## {{ section.title }}
+
+{{ section.content }}
+
+{% endfor %}

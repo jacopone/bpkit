@@ -56,6 +56,63 @@ Based on Sequoia Capital's pitch deck template, this system decomposes business 
 
 ---
 
+## Installation
+
+### Prerequisites
+
+- Python 3.11 or higher
+- [uv](https://github.com/astral-sh/uv) package manager (recommended)
+- Or pip for standard Python package installation
+
+### Install BP-Kit CLI
+
+**Option 1: Using uv (Recommended)**
+
+```bash
+uv tool install bpkit-cli
+```
+
+**Option 2: Using pip**
+
+```bash
+pip install bpkit-cli
+```
+
+**Option 3: From source**
+
+```bash
+git clone https://github.com/yourusername/bp-to-constitution.git
+cd bp-to-constitution
+uv pip install -e .
+```
+
+### Initialize BP-Kit in Your Project
+
+**For existing Speckit projects:**
+
+```bash
+cd your-speckit-project
+bpkit init
+```
+
+**For new projects (bootstraps both Speckit and BP-Kit):**
+
+```bash
+mkdir my-startup
+cd my-startup
+bpkit init my-startup
+```
+
+### Verify Installation
+
+```bash
+bpkit check
+```
+
+This validates that all templates, directories, and commands are properly installed.
+
+---
+
 ## Quick Start
 
 ### Step 1: Decompose Your Business Plan
@@ -226,6 +283,153 @@ This creates an audit trail from MVP to scale.
 ---
 
 ## Commands
+
+### Quality Commands (Optional)
+
+Before decomposing or after generating constitutions, use these optional quality commands to ensure high-quality specifications:
+
+#### `/bp.clarify`
+
+**Identify and resolve pitch deck ambiguities**
+
+Analyzes your pitch deck for vague or incomplete sections and asks targeted clarification questions before decomposition.
+
+**Use when**:
+- Starting fresh with `/bp.decompose`
+- Pitch deck has placeholders or [TBD] sections
+- Want to ensure completeness before generating constitutions
+
+**Flags**:
+- `--section <id>`: Focus on specific pitch deck section
+- `--dry-run`: Preview questions without updating deck
+
+**Example**:
+```bash
+# Full deck analysis (asks up to 5 highest-priority questions)
+bpkit clarify
+
+# Focus on business model section
+bpkit clarify --section business-model
+
+# Preview mode
+bpkit clarify --dry-run
+```
+
+**Output**:
+- Interactive Q&A with suggested answers
+- Updates pitch deck in-place with clarifications
+- Bumps pitch deck version (PATCH)
+- Logs changes to `.specify/changelog/`
+
+---
+
+#### `/bp.analyze`
+
+**Validate constitutional consistency and traceability**
+
+Comprehensive validation after generating constitutions with `/bp.decompose`.
+
+**Checks**:
+- All traceability links (pitch deck ← constitutions ← features)
+- Conflicting principles across strategic constitutions
+- Coverage gaps (pitch deck sections not referenced)
+- Version consistency (constitutions reference correct deck version)
+- Circular dependencies between features
+- Orphaned principles with no downstream references
+
+**Flags**:
+- `--verbose` / `-v`: Show detailed analysis including valid links
+- `--fix`: Auto-fix simple issues (version mismatches only)
+
+**Example**:
+```bash
+# Standard analysis
+bpkit analyze
+
+# Verbose mode with all details
+bpkit analyze --verbose
+
+# Auto-fix simple issues
+bpkit analyze --fix
+```
+
+**Output**:
+- Analysis report saved to `.specify/changelog/YYYY-MM-DD-analyze-report.md`
+- Color-coded summary (errors in red, warnings in yellow, info in blue)
+- Suggestions for fixing broken links
+- Exit code 1 if errors found (blocks CI/CD)
+
+---
+
+#### `/bp.checklist`
+
+**Generate quality validation checklists**
+
+Creates structured validation checklists for all constitutions with type-specific criteria.
+
+**Use when**:
+- Ready to validate constitutional quality
+- Preparing for `/speckit.implement`
+- Want structured quality gates
+
+**Modes**:
+- **Generate** (default): Create checklists for all constitutions
+- **Report** (`--report`): Show completion status
+
+**Flags**:
+- `--report`: Display completion table instead of generating
+- `--force`: Overwrite existing checklists
+
+**Examples**:
+```bash
+# Generate checklists
+bpkit checklist
+
+# View completion status
+bpkit checklist --report
+
+# Regenerate all checklists
+bpkit checklist --force
+```
+
+**Output**:
+- `.specify/checklists/{constitution-name}.md` for each constitution
+- Strategic constitutions: 10-item checklist (Traceability, Quality, Completeness)
+- Feature constitutions: 15-item checklist (Traceability, Quality, Completeness)
+- Completion report with color-coded status
+
+**Checklist Structure**:
+```markdown
+## Traceability (4-5 items)
+- [ ] All principles have measurable outcomes
+- [ ] Each principle links back to pitch deck section
+- [ ] Version properly tracked in frontmatter
+...
+
+## Quality (3-5 items)
+- [ ] No implementation details in principles
+- [ ] Principles are testable and unambiguous
+...
+
+## Completeness (3-5 items)
+- [ ] Examples include both compliant and violation cases
+- [ ] Ready for /speckit.plan
+...
+```
+
+**Workflow Integration**:
+```bash
+# Recommended quality workflow
+bpkit clarify                    # 1. Resolve ambiguities
+bpkit decompose --interactive    # 2. Generate constitutions (not yet implemented)
+bpkit analyze                    # 3. Validate consistency
+bpkit checklist                  # 4. Generate quality gates
+# [Manually check off checklist items]
+bpkit checklist --report         # 5. Verify 100% completion
+# Ready for /speckit.implement
+```
+
+---
 
 ### `/bp.decompose`
 

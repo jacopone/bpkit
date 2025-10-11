@@ -1,0 +1,156 @@
+# Feature Constitution Contract
+# Defines schema for MVP feature specifications (Speckit-compatible)
+
+version: "1.0.0"
+
+schema:
+  frontmatter:
+    version:
+      type: "string"
+      format: "semver"
+      required: true
+    type:
+      type: "string"
+      enum: ["feature"]
+      required: true
+    created:
+      type: "string"
+      format: "date"
+      required: true
+    updated:
+      type: "string"
+      format: "date"
+      required: true
+    source:
+      type: "string"
+      value: "pitch-deck.md"
+      required: true
+    pitch_deck_version:
+      type: "string"
+      format: "semver"
+      required: true
+    upstream:
+      type: "array"
+      items: "string"
+      description: "Strategic constitution files referenced"
+      required: true
+      min_items: 1
+
+  content_structure:
+    - section: "title"
+      format: "# Feature {ID}: {Name}"
+      required: true
+
+    - section: "upstream_links"
+      format: "**Upstream**: Links to strategic constitutions"
+      required: true
+
+    - section: "user_stories"
+      format: "## User Story {N} - {Title} (Priority: P1/P2/P3)"
+      required: true
+      min_stories: 1
+
+    - section: "entities"
+      format: "## Key Entities"
+      required: false  # Hybrid approach: can be empty or contain stubs
+      description: "Entity names + relationships extracted, attributes [TODO]"
+
+    - section: "success_criteria"
+      format: "## Success Criteria"
+      required: true
+      min_criteria: 1
+
+    - section: "principles"
+      format: "## Feature Principles"
+      required: true
+      min_principles: 1
+
+entity_stub_format:
+  name:
+    type: "string"
+    format: "CamelCase"
+    required: true
+  source:
+    type: "string"
+    format: "pitch-deck link"
+    required: true
+  rationale:
+    type: "string"
+    required: true
+  attributes:
+    type: "string"
+    value: "[TODO: Define attributes]"
+    required: true
+  relationships:
+    type: "array"
+    items: "relationship"
+    required: true
+    min_items: 1
+  constraints:
+    type: "string"
+    value: "[TODO: Define constraints]"
+    required: true
+  lifecycle:
+    type: "string"
+    value: "[TODO: Define states]"
+    required: true
+
+success_criterion_format:
+  id:
+    type: "string"
+    format: "SC-{FID}-{NNN}"
+    required: true
+  text:
+    type: "string"
+    min_length: 10
+    required: true
+  type:
+    type: "string"
+    enum: ["derived", "placeholder"]
+    required: true
+  source:
+    type: "string"
+    format: "pitch-deck link"
+    required: true
+  # For derived criteria:
+  confidence:
+    type: "float"
+    min: 0.7
+    max: 1.0
+    required_if: "type=derived"
+  rationale:
+    type: "string"
+    required_if: "type=derived"
+  test:
+    type: "string"
+    required_if: "type=derived"
+  # For placeholder criteria:
+  guidance:
+    type: "string"
+    required_if: "type=placeholder"
+
+validation_rules:
+  - "feature_id must be 001-010"
+  - "feature_name must be kebab-case"
+  - "Must reference ≥1 strategic constitution (upstream)"
+  - "All upstream links must resolve"
+  - "Must have ≥1 success criterion"
+  - "Entities can be empty OR contain valid stubs"
+  - "If entities present, each must have ≥1 relationship"
+
+file_naming:
+  pattern: "{id}-{name}.md"
+  location: ".specify/features/"
+  examples:
+    - "001-user-management.md"
+    - "002-booking-system.md"
+    - "003-payment-processing.md"
+
+speckit_compatibility:
+  compatible_with: "/speckit.plan --constitution features/{file}"
+  validates_as: "valid Speckit specification"
+  sections_expected_by_speckit:
+    - "User Scenarios & Testing"
+    - "Key Entities"
+    - "Success Criteria"
+    - "Feature Principles"

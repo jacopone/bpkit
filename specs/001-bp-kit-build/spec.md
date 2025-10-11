@@ -17,11 +17,11 @@ A developer has an existing Speckit project and wants to add BP-Kit templates to
 
 **Acceptance Scenarios**:
 
-1. **Given** I have a Speckit project with `.specify/` directory, **When** I run `bpkit init`, **Then** BP-Kit templates are added to `.specify/templates/` and `.claude/commands/` without overwriting existing Speckit files
+1. **Given** I have a Speckit project (`.specify/` directory exists), **When** I run `bpkit init`, **Then** BP-Kit templates are added to `.specify/templates/` and `.claude/commands/` without overwriting existing Speckit files
 2. **Given** I run `bpkit init` successfully, **When** I check the directory structure, **Then** I see `.specify/deck/`, `.specify/features/`, `.specify/changelog/` directories created
 3. **Given** I run `bpkit init` successfully, **When** I list `.specify/templates/`, **Then** I see `pitch-deck-template.md`, `strategic-constitution-template.md`, and `feature-constitution-template.md`
 4. **Given** I run `bpkit init` successfully, **When** I check `.claude/commands/`, **Then** I see `bp.decompose.md` and `bp.sync.md` slash commands
-5. **Given** I run `bpkit init` in a directory that already has BP-Kit installed, **When** the command detects existing BP-Kit files, **Then** it asks for confirmation before overwriting unless `--force` flag is used
+5. **Given** I run `bpkit init` in a directory that already has BP-Kit installed, **When** the command detects existing BP-Kit files, **Then** it prompts "BP-Kit already installed. Overwrite? (y/N)" and waits for user input (unless `--force` flag used, which skips prompt)
 
 ---
 
@@ -35,7 +35,7 @@ A developer wants to start a new project with both Speckit and BP-Kit from scrat
 
 **Acceptance Scenarios**:
 
-1. **Given** I'm in an empty directory (no Speckit installed), **When** I run `bpkit init my-startup`, **Then** both Speckit and BP-Kit structures are initialized with the project name
+1. **Given** I'm in an empty directory (no `.specify/` folder), **When** I run `bpkit init my-startup`, **Then** both Speckit and BP-Kit structures are initialized with the project name
 2. **Given** I initialize a new project with `bpkit init`, **When** the init completes, **Then** I see a welcome message with next steps (how to use `/bp.decompose`)
 3. **Given** I initialize a new project, **When** I check git status, **Then** a `.gitignore` is present that excludes temporary files but includes templates
 
@@ -61,24 +61,26 @@ A developer wants to verify BP-Kit is properly installed and configured.
 
 - What happens when user runs `bpkit init` in a directory that has Speckit templates but no `.specify/memory/constitution.md`? (Handle: Create missing constitution)
 - What happens when `.specify/` directory exists but is empty? (Handle: Treat as fresh install)
-- What happens when user has write permission issues? (Handle: Fail gracefully with clear error message explaining permission requirements)
-- What happens when Git is not initialized? (Handle: Warn user but continue - Git is optional)
+- What happens when user has write permission issues? (Handle: Rollback any created files, fail with clear error message explaining permission requirements and which directory needs write access)
+- What happens when Git is not initialized? (Handle: Prompt user "Git not detected. Create .gitignore for future use? (Y/n)" - respect user choice, continue installation either way)
 - What happens when user already has custom templates with same names? (Handle: Prompt for backup or merge strategy)
+- What happens when network connection fails during template download? (Handle: Rollback all created files, report which template failed to download, suggest checking network connection)
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: System MUST create `.specify/deck/`, `.specify/features/`, `.specify/changelog/`, and `.specify/scripts/bp/` directories if they don't exist
-- **FR-002**: System MUST copy `pitch-deck-template.md`, `strategic-constitution-template.md`, and `feature-constitution-template.md` to `.specify/templates/`
+- **FR-002**: System MUST download `pitch-deck-template.md`, `strategic-constitution-template.md`, and `feature-constitution-template.md` from GitHub/CDN and save to `.specify/templates/` (requires network connection)
 - **FR-003**: System MUST create `.claude/commands/bp.decompose.md` and `.claude/commands/bp.sync.md` slash command files
 - **FR-004**: System MUST create bash utility scripts in `.specify/scripts/bp/` (bp-common.sh, decompose-setup.sh)
-- **FR-005**: System MUST detect existing BP-Kit installation and prompt user before overwriting unless `--force` flag is provided
+- **FR-005**: System MUST detect existing BP-Kit installation and prompt user "BP-Kit already installed. Overwrite? (y/N)" before overwriting unless `--force` flag is provided (which skips prompt and overwrites)
 - **FR-006**: System MUST validate that installation completes without conflicts with Speckit files (no overwrites of `/speckit.*` commands or Speckit templates)
 - **FR-007**: System MUST support `--project-name` option to set project name in templates
-- **FR-008**: System MUST create a `.gitignore` entry for `.specify/deck/*.pdf` (pitch deck PDFs should not be committed by default)
+- **FR-008**: System MUST create or append to `.gitignore` entry for `.specify/deck/*.pdf` (pitch deck PDFs should not be committed by default). If no Git repository detected (no `.git/` folder), prompt user: "Git not detected. Create .gitignore for future use? (Y/n)"
 - **FR-009**: System MUST display installation summary showing what was created and next steps
 - **FR-010**: System MUST work both as CLI (`bpkit init`) and via package managers (`uvx --from git+https://... bpkit init`)
+- **FR-011**: System MUST rollback all created files and directories if any installation step fails (network error, disk full, permission denied), returning system to pre-init state
 
 ### Key Entities
 
@@ -119,15 +121,26 @@ A developer wants to verify BP-Kit is properly installed and configured.
 - Users have write permissions to the target directory
 - Git is optional but recommended (BP-Kit will warn if not present)
 - Users are familiar with command-line tools
-- Network connection available for downloading templates (if distributed as package)
+- Network connection available during `bpkit init` for downloading templates from GitHub/CDN
 
 ## Dependencies
 
 - **Python**: 3.11+ runtime
 - **Typer**: CLI framework (installed as dependency)
 - **Rich**: Console UI library (installed as dependency)
+- **httpx[socks]**: HTTP client for downloading templates from GitHub/CDN (installed as dependency)
 - **platformdirs**: For finding user config directories (installed as dependency)
 - **Speckit**: Optional but recommended (BP-Kit enhances Speckit but can work standalone)
+
+## Clarifications
+
+### Session 2025-10-10
+
+- Q: How should BP-Kit templates be distributed? → A: Downloaded on init - Templates fetched from GitHub/CDN during `bpkit init`, requires network connection at init time
+- Q: What constitutes an "existing Speckit project" for detection purposes? → A: `.specify/` directory exists - Any project with `.specify/` folder is treated as Speckit project
+- Q: How should BP-Kit handle partial installation failures? → A: Rollback on failure - Delete all created files/directories if any step fails, return to pre-init state
+- Q: How should BP-Kit handle `.gitignore` creation when no Git repository exists? → A: Prompt user - Ask "Git not detected. Create .gitignore for future use? (Y/n)"
+- Q: What format should the overwrite confirmation prompt use? → A: Simple Y/N - "BP-Kit already installed. Overwrite? (y/N)" as single yes/no choice
 
 ## Out of Scope (v1)
 

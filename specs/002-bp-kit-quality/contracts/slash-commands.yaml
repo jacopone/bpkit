@@ -1,0 +1,341 @@
+# BP-Kit Quality Commands - Slash Command Interface Contracts
+
+version: "1.0.0"
+description: "Interface contracts for BP-Kit quality slash commands"
+
+# These are markdown-based commands executed in Claude Code environment
+# Not REST APIs - commands are prompts that execute Python CLI tools
+
+commands:
+  bp.clarify:
+    file: ".claude/commands/bp.clarify.md"
+    description: "Analyze pitch deck for ambiguities and prompt user for clarifications"
+
+    parameters:
+      - name: "--section"
+        type: "string"
+        required: false
+        description: "Focus clarification on specific pitch deck section ID"
+        examples:
+          - "business-model"
+          - "competition"
+          - "market-potential"
+        validation: "Must match valid Sequoia template section ID"
+
+      - name: "--dry-run"
+        type: "boolean"
+        required: false
+        default: false
+        description: "Show questions without updating pitch deck"
+
+    execution_flow:
+      1: "Parse .specify/deck/pitch-deck.md"
+      2: "Detect vague/incomplete sections using heuristics"
+      3: "Generate maximum 5 clarification questions, prioritized by impact"
+      4: "Present questions with suggested answers in markdown table format"
+      5: "Wait for user responses in format 'Q1: A, Q2: Custom - [details], Q3: B'"
+      6: "Update pitch deck sections with answers"
+      7: "Bump pitch deck version (PATCH)"
+      8: "Display summary and recommend running /bp.decompose"
+
+    output:
+      success:
+        message: "✅ Pitch deck clarified - 3 sections updated"
+        files_modified:
+          - ".specify/deck/pitch-deck.md"
+        version_bump: "1.0.0 → 1.0.1"
+        next_steps: "Run /bp.decompose to regenerate constitutions with clarifications"
+
+      no_clarifications:
+        message: "✅ No clarifications needed - pitch deck is complete"
+        next_steps: "Ready to run /bp.decompose"
+
+      error:
+        conditions:
+          - "Pitch deck file not found"
+          - "Invalid --section parameter"
+          - "User cancels during Q&A (Ctrl+C)"
+        message_format: "❌ Error: {error_message}"
+
+  bp.analyze:
+    file: ".claude/commands/bp.analyze.md"
+    description: "Validate constitutional consistency and traceability after decomposition"
+
+    parameters:
+      - name: "--verbose"
+        type: "boolean"
+        required: false
+        default: false
+        description: "Show detailed analysis including valid links"
+
+      - name: "--fix"
+        type: "boolean"
+        required: false
+        default: false
+        description: "Attempt to auto-fix simple issues (broken file paths only)"
+
+    execution_flow:
+      1: "Scan .specify/memory/ for strategic constitutions"
+      2: "Scan .specify/features/ for feature constitutions"
+      3: "Parse all markdown files and extract TraceabilityLinks"
+      4: "Validate each link: check target file exists, section ID exists"
+      5: "Detect conflicts: contradictory principles across strategic constitutions"
+      6: "Check coverage: ensure all pitch deck sections referenced"
+      7: "Validate version consistency: all constitutions reference same deck version"
+      8: "Generate AnalysisReport with errors/warnings/info categorized"
+      9: "Save report to .specify/changelog/YYYY-MM-DD-analyze-report.md"
+      10: "Display summary table with color-coded severity"
+
+    output:
+      success:
+        message: "✅ All systems ready - no issues found"
+        report_summary:
+          strategic_constitutions: 4
+          feature_constitutions: 7
+          links_validated: 42
+          errors: 0
+          warnings: 0
+        next_steps: "Run /bp.checklist to generate quality gates"
+
+      issues_found:
+        message: "⚠️ Issues detected - see report for details"
+        report_file: ".specify/changelog/2025-10-10-analyze-report.md"
+        report_summary:
+          errors: 2
+          warnings: 1
+          info: 3
+        next_steps: "Fix errors, then re-run /bp.analyze"
+
+      error:
+        conditions:
+          - "No constitutions found (run /bp.decompose first)"
+          - "Pitch deck not found"
+          - "Invalid directory structure"
+        message_format: "❌ Error: {error_message}"
+
+    validation_rules:
+      broken_link:
+        severity: "ERROR"
+        message_format: "ERROR: {source_file}:{line} references {target_file}#{section} which does not exist"
+        auto_fix: false
+
+      conflict:
+        severity: "WARNING"
+        message_format: "CONFLICT: {file1}#{principle1} contradicts {file2}#{principle2}"
+        auto_fix: false
+        suggestion: "Review principles and align or document intentional trade-off"
+
+      coverage_gap:
+        severity: "WARNING"
+        message_format: "COVERAGE GAP: pitch-deck.md#{section} not referenced by any constitution"
+        auto_fix: false
+        suggestion: "Add principle to appropriate strategic constitution"
+
+      version_mismatch:
+        severity: "WARNING"
+        message_format: "VERSION MISMATCH: {constitution} references deck v{old_version} but current is v{new_version}"
+        auto_fix: true
+        fix_action: "Update version reference in constitution frontmatter"
+
+  bp.checklist:
+    file: ".claude/commands/bp.checklist.md"
+    description: "Generate quality validation checklists for all constitutions"
+
+    parameters:
+      - name: "--report"
+        type: "boolean"
+        required: false
+        default: false
+        description: "Show completion status of existing checklists instead of generating new ones"
+
+      - name: "--force"
+        type: "boolean"
+        required: false
+        default: false
+        description: "Overwrite existing checklists"
+
+    execution_flow:
+      generate_mode:
+        1: "Scan .specify/memory/ and .specify/features/ for constitutions"
+        2: "For each constitution, determine type (strategic vs feature)"
+        3: "Load appropriate checklist template (Jinja2)"
+        4: "Render template with constitution-specific context"
+        5: "Write checklist to .specify/checklists/{constitution-name}.md"
+        6: "Display summary of checklists created"
+
+      report_mode:
+        1: "Scan .specify/checklists/ for existing checklists"
+        2: "Parse each checklist and count checked items"
+        3: "Calculate completion percentage"
+        4: "Display table with constitution name, completion %, remaining items"
+        5: "Show overall readiness assessment"
+
+    output:
+      success_generate:
+        message: "✅ Checklists generated for 11 constitutions"
+        checklists_created:
+          - ".specify/checklists/company-constitution.md (10 items)"
+          - ".specify/checklists/product-constitution.md (10 items)"
+          - ".specify/checklists/market-constitution.md (10 items)"
+          - ".specify/checklists/business-constitution.md (10 items)"
+          - ".specify/checklists/001-user-management.md (15 items)"
+          - ".specify/checklists/002-listing-management.md (15 items)"
+          - "... (5 more feature constitutions)"
+        next_steps: "Review checklists and check off items as you validate"
+
+      success_report:
+        message: "📊 Checklist Completion Report"
+        report_table: |
+          | Constitution | Completion | Remaining |
+          |--------------|------------|-----------|
+          | company-constitution | 100% ✅ | 0 |
+          | product-constitution | 80% | 2 |
+          | market-constitution | 90% | 1 |
+          | business-constitution | 100% ✅ | 0 |
+          | 001-user-management | 86% | 2 |
+          | ... | ... | ... |
+        overall_status: "83% complete (12 items remaining)"
+        next_steps: "Complete remaining items, then ready for /speckit.implement"
+
+      error:
+        conditions:
+          - "No constitutions found (run /bp.decompose first)"
+          - "Checklist already exists and --force not provided"
+          - ".specify/checklists/ directory not writable"
+        message_format: "❌ Error: {error_message}"
+
+    checklist_templates:
+      strategic:
+        items:
+          - "□ All principles have measurable outcomes"
+          - "□ Each principle links back to pitch deck section"
+          - "□ No implementation details in principles"
+          - "□ Version properly tracked in frontmatter"
+          - "□ Principles are testable and unambiguous"
+          - "□ At least 3 downstream features reference this constitution"
+          - "□ Rationale explains 'why' for each principle"
+          - "□ Examples include both compliant and violation cases"
+          - "□ Amendment process documented"
+          - "□ Review cycle defined"
+
+      feature:
+        items:
+          - "□ All user stories have acceptance criteria"
+          - "□ Success criteria are measurable and technology-agnostic"
+          - "□ Feature links to at least 1 strategic principle"
+          - "□ Data model entities are clearly defined"
+          - "□ Entity relationships documented"
+          - "□ No [NEEDS CLARIFICATION] markers remain"
+          - "□ MVP boundaries are explicit (IN/OUT scope)"
+          - "□ Dependencies on other features listed"
+          - "□ Edge cases identified"
+          - "□ Non-functional requirements specified"
+          - "□ Feature principles (FP1-FPX) all have upstream sources"
+          - "□ API contracts defined (if applicable)"
+          - "□ State transitions documented (if applicable)"
+          - "□ Security/privacy considerations addressed"
+          - "□ Ready for /speckit.plan"
+
+# Error Handling Across All Commands
+
+error_types:
+  file_not_found:
+    http_equivalent: 404
+    message: "{file_path} not found"
+    recovery: "Ensure bpkit init was run and file exists"
+
+  invalid_parameter:
+    http_equivalent: 400
+    message: "Invalid parameter: {param_name}={param_value}"
+    recovery: "Check command help for valid parameter values"
+
+  parse_error:
+    http_equivalent: 422
+    message: "Failed to parse {file_path}: {error_details}"
+    recovery: "Check markdown syntax and fix errors"
+
+  version_error:
+    http_equivalent: 409
+    message: "Version conflict: {details}"
+    recovery: "Run /bp.sync to resolve version mismatches"
+
+  user_abort:
+    http_equivalent: 499
+    message: "Command cancelled by user"
+    recovery: "No changes made - safe to retry"
+
+# Success Criteria Validation
+
+performance_targets:
+  bp.clarify: "<10 seconds for typical pitch deck"
+  bp.analyze: "<2 seconds for 10 constitutions"
+  bp.checklist: "<5 seconds to generate all checklists"
+
+quality_targets:
+  bp.clarify: "Maximum 5 questions, prioritized by impact"
+  bp.analyze: "100% broken link detection rate"
+  bp.checklist: "Context-specific items (strategic vs feature)"
+
+# Command Sequencing
+
+recommended_workflow:
+  1:
+    command: "/bp.clarify"
+    when: "After creating pitch deck, before decomposition"
+    optional: true
+    benefit: "Prevents weak constitutions from vague pitch deck"
+
+  2:
+    command: "/bp.decompose"
+    when: "After pitch deck is complete"
+    optional: false
+    benefit: "Generates strategic + feature constitutions"
+
+  3:
+    command: "/bp.analyze"
+    when: "After decomposition, before implementation"
+    optional: false
+    benefit: "Catches broken links, conflicts, coverage gaps"
+
+  4:
+    command: "/bp.checklist"
+    when: "After analyze passes (no errors)"
+    optional: true
+    benefit: "Structured quality review before AI implementation"
+
+  5:
+    command: "/speckit.implement"
+    when: "After checklists 100% complete"
+    optional: false
+    benefit: "Build features with AI agents"
+
+# Integration with Existing Commands
+
+integration_points:
+  bp.decompose:
+    generates:
+      - ".specify/memory/*.md (strategic constitutions)"
+      - ".specify/features/*.md (feature constitutions)"
+    consumed_by:
+      - "/bp.analyze (validates output)"
+      - "/bp.checklist (generates checklists for output)"
+
+  bp.sync:
+    triggers:
+      - "Re-run /bp.analyze after sync to validate changes"
+      - "Checklist items may need re-review if principles changed"
+
+  speckit.plan:
+    requires:
+      - "Feature constitution from /bp.decompose"
+      - "Optionally validated by /bp.checklist first"
+    validates:
+      - "Constitution Check section includes BP-Kit principles"
+
+# Version History
+
+versions:
+  1.0.0:
+    date: "2025-10-10"
+    changes: "Initial contract definition for 3 quality commands"
+    breaking_changes: []

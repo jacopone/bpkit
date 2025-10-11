@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: GitHub Raw Content API
+  description: |
+    Contract for downloading BP-Kit templates from GitHub raw content URLs.
+    Used by `bpkit init` to fetch template files.
+  version: 1.0.0
+  contact:
+    name: BP-Kit
+    url: https://github.com/user/bp-kit
+
+servers:
+  - url: https://raw.githubusercontent.com
+    description: GitHub raw content CDN
+
+paths:
+  /{org}/{repo}/{branch}/{path}:
+    get:
+      summary: Download raw file content from GitHub repository
+      description: |
+        Fetches raw file content from a public GitHub repository.
+        Used to download BP-Kit template files during installation.
+      operationId: downloadRawFile
+      parameters:
+        - name: org
+          in: path
+          required: true
+          schema:
+            type: string
+          description: GitHub organization or user name
+          example: user
+
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Repository name
+          example: bp-kit
+
+        - name: branch
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Branch, tag, or commit SHA
+          example: main
+
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+          description: File path within repository
+          example: templates/pitch-deck-template.md
+
+      responses:
+        '200':
+          description: File content successfully retrieved
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # Pitch Deck Template
+
+                  Project: [PROJECT_NAME]
+              examples:
+                markdownTemplate:
+                  summary: Markdown template file
+                  value: |
+                    # Pitch Deck Template
+
+                    ## Company Purpose
+                    [PROJECT_NAME] exists to solve...
+
+                bashScript:
+                  summary: Bash script template
+                  value: |
+                    #!/usr/bin/env bash
+                    # BP-Kit utility script
+
+          headers:
+            Content-Type:
+              schema:
+                type: string
+              description: MIME type of the file
+              example: text/plain; charset=utf-8
+
+            Content-Length:
+              schema:
+                type: integer
+              description: Size of file in bytes
+              example: 8192
+
+            Cache-Control:
+              schema:
+                type: string
+              description: Caching directives
+              example: max-age=300
+
+        '404':
+          description: File not found (invalid path, branch, or repository)
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "404: Not Found"
+
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "API rate limit exceeded"
+                  documentation_url:
+                    type: string
+                    example: "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+          headers:
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Number of requests remaining
+              example: 0
+
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when rate limit resets
+              example: 1633024800
+
+        '500':
+          description: Internal server error
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "500: Internal Server Error"
+
+        '503':
+          description: Service temporarily unavailable
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "503: Service Unavailable"
+
+      x-retry-policy:
+        max_attempts: 3
+        backoff_strategy: exponential
+        initial_wait_seconds: 2
+        max_wait_seconds: 10
+        retryable_status_codes: [429, 500, 503, 504]
+        retryable_exceptions:
+          - NetworkError
+          - Timeout
+          - ConnectionError
+
+      x-timeout:
+        read_timeout_seconds: 10
+        connect_timeout_seconds: 5
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Human-readable error message
+        status_code:
+          type: integer
+          description: HTTP status code
+
+x-bp-kit-usage:
+  templates:
+    - name: pitch-deck-template.md
+      url: https://raw.githubusercontent.com/user/bp-kit/main/.specify/templates/pitch-deck-template.md
+      destination: .specify/templates/pitch-deck-template.md
+      type: markdown
+
+    - name: strategic-constitution-template.md
+      url: https://raw.githubusercontent.com/user/bp-kit/main/.specify/templates/strategic-constitution-template.md
+      destination: .specify/templates/strategic-constitution-template.md
+      type: markdown
+
+    - name: feature-constitution-template.md
+      url: https://raw.githubusercontent.com/user/bp-kit/main/.specify/templates/feature-constitution-template.md
+      destination: .specify/templates/feature-constitution-template.md
+      type: markdown
+
+    - name: bp.decompose.md
+      url: https://raw.githubusercontent.com/user/bp-kit/main/.claude/commands/bp.decompose.md
+      destination: .claude/commands/bp.decompose.md
+      type: command
+
+    - name: bp.sync.md
+      url: https://raw.githubusercontent.com/user/bp-kit/main/.claude/commands/bp.sync.md
+      destination: .claude/commands/bp.sync.md
+      type: command
+
+    - name: bp-common.sh
+      url: https://raw.githubusercontent.com/user/bp-kit/main/.specify/scripts/bp/bp-common.sh
+      destination: .specify/scripts/bp/bp-common.sh
+      type: bash
+
+    - name: decompose-setup.sh
+      url: https://raw.githubusercontent.com/user/bp-kit/main/.specify/scripts/bp/decompose-setup.sh
+      destination: .specify/scripts/bp/decompose-setup.sh
+      type: bash
+
+  expected_sizes:
+    markdown: 5-50 KB
+    bash: 1-10 KB
+    total_download: ~70 KB
+
+  performance_targets:
+    total_download_time_seconds: 3-8
+    per_file_timeout_seconds: 10
+    max_total_time_seconds: 30

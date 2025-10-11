@@ -1,0 +1,215 @@
+# Sequoia Capital Pitch Deck Template Contract
+# Defines the 10-section canonical structure for BP-Kit decomposition
+
+version: "1.0.0"
+template_name: "Sequoia Capital Pitch Deck Template"
+sections_count: 10  # Must be exactly 10 sections
+
+sections:
+  - section_id: "company-purpose"
+    title: "Company Purpose"
+    position: 1
+    description: "Define the company/business in a single declarative sentence"
+    maps_to_constitution: "company-constitution.md"
+    prompts:
+      - "What is your company's core mission in one sentence?"
+      - "Example: 'AirBnB: Book rooms with locals, rather than hotels'"
+    expected_content_type: "single_sentence"
+    is_required: true
+
+  - section_id: "problem"
+    title: "Problem"
+    position: 2
+    description: "Describe customer pain and current solutions"
+    maps_to_constitution: "company-constitution.md"
+    prompts:
+      - "What pain does your customer experience?"
+      - "How do customers address this issue today?"
+    expected_content_type: "paragraphs"
+    is_required: true
+
+  - section_id: "solution"
+    title: "Solution"
+    position: 3
+    description: "Demonstrate value proposition and use cases"
+    maps_to_constitution: "product-constitution.md"
+    prompts:
+      - "How does your product make the customer's life better?"
+      - "What are the key use cases?"
+      - "Where does your product physically sit in the workflow?"
+    expected_content_type: "paragraphs_with_bullets"
+    is_required: true
+
+  - section_id: "why-now"
+    title: "Why Now"
+    position: 4
+    description: "Historical evolution and current trends"
+    maps_to_constitution: "company-constitution.md"
+    prompts:
+      - "What has changed recently that creates this opportunity?"
+      - "What trends support your business now?"
+    expected_content_type: "paragraphs"
+    is_required: true
+
+  - section_id: "market-potential"
+    title: "Market Size"
+    position: 5
+    description: "TAM, SAM, SOM calculation and customer profile"
+    maps_to_constitution: "market-constitution.md"
+    prompts:
+      - "What is your Total Addressable Market (TAM)?"
+      - "What is your Serviceable Available Market (SAM)?"
+      - "What is your Serviceable Obtainable Market (SOM)?"
+      - "Who is your target customer?"
+    expected_content_type: "numbers_with_breakdown"
+    is_required: true
+
+  - section_id: "competition"
+    title: "Competition"
+    position: 6
+    description: "Competitors and competitive advantages"
+    maps_to_constitution: "market-constitution.md"
+    prompts:
+      - "Who are your main competitors?"
+      - "What are your competitive advantages?"
+      - "Why will you win?"
+    expected_content_type: "bullets_with_analysis"
+    is_required: true
+
+  - section_id: "product"
+    title: "Product"
+    position: 7
+    description: "Product line-up and roadmap"
+    maps_to_constitution: "product-constitution.md"
+    prompts:
+      - "What is your current product offering?"
+      - "What features are planned for v1, v2, v3?"
+      - "What is on the roadmap?"
+    expected_content_type: "bullets_with_timeline"
+    is_required: true
+
+  - section_id: "business-model"
+    title: "Business Model"
+    position: 8
+    description: "Revenue model, pricing, LTV, and distribution"
+    maps_to_constitution: "business-constitution.md"
+    prompts:
+      - "How do you make money?"
+      - "What is your pricing model?"
+      - "What is the average account size or LTV?"
+      - "How do you distribute and sell?"
+    expected_content_type: "structured_metrics"
+    is_required: true
+
+  - section_id: "team"
+    title: "Team"
+    position: 9
+    description: "Founders, management, board, and advisors"
+    maps_to_constitution: "business-constitution.md"
+    prompts:
+      - "Who are the founders and what's their background?"
+      - "Who is on the management team?"
+      - "Who are your advisors or board members?"
+    expected_content_type: "profiles"
+    is_required: true
+
+  - section_id: "financials"
+    title: "Financials"
+    position: 10
+    description: "P&L projection and cash flow"
+    maps_to_constitution: "business-constitution.md"
+    prompts:
+      - "What are your revenue projections (Year 1-3)?"
+      - "What are your key expenses?"
+      - "What is your cash flow situation?"
+      - "How much funding are you raising?"
+    expected_content_type: "tables_or_charts"
+    is_required: true
+
+# Constitutional Mapping Rules (FR-003)
+constitution_mappings:
+  company-constitution.md:
+    source_sections:
+      - "company-purpose"
+      - "problem"
+      - "solution"
+      - "why-now"
+    principle_types:
+      - "mission_statement"
+      - "value_proposition"
+      - "strategic_timing"
+
+  product-constitution.md:
+    source_sections:
+      - "solution"
+      - "product"
+    principle_types:
+      - "product_features"
+      - "user_experience"
+      - "technical_capabilities"
+
+  market-constitution.md:
+    source_sections:
+      - "market-potential"
+      - "competition"
+    principle_types:
+      - "target_market"
+      - "competitive_advantage"
+      - "market_positioning"
+
+  business-constitution.md:
+    source_sections:
+      - "business-model"
+      - "financials"
+      - "team"
+    principle_types:
+      - "revenue_model"
+      - "operational_constraints"
+      - "team_composition"
+
+# Feature Detection Rules (FR-004, FR-016)
+feature_detection:
+  source_sections:
+    - "product"
+    - "solution"
+  extraction_heuristics:
+    - "bulleted_lists"
+    - "action_verbs"
+    - "feature_keywords"
+  min_features: 5
+  max_features: 10
+  priority_assignment:
+    - P1: "Core MVP features (mentioned first or emphasized)"
+    - P2: "Important but not blocking (mentioned second tier)"
+    - P3: "Nice-to-have (mentioned last or as future work)"
+
+# Validation Rules
+validation:
+  required_sections_count: 10
+  allow_extra_sections: true  # Custom sections OK but not mapped
+  section_id_format: "^[a-z0-9-]+$"  # GitHub-style heading IDs
+  version_format: "^\\d+\\.\\d+\\.\\d+$"  # SemVer
+
+# Traceability Rules (FR-005)
+traceability:
+  strategic_constitution_links:
+    format: "**Source**: [`pitch-deck.md#{section_id}`](../deck/pitch-deck.md#{section_id})"
+    required: true
+  feature_constitution_links:
+    format: "**Upstream**: [`{constitution}.md#{principle_id}`](../memory/{constitution}.md#{principle_id})"
+    required: true
+  link_validation:
+    enabled: true
+    validator: "bp.analyze"  # Reuse Feature 002 link validator
+
+# Performance Targets (SC-001, SC-005)
+performance:
+  decomposition_time_target: "< 2 minutes"  # SC-001
+  interactive_mode_target: "< 15 minutes"  # SC-005
+  pdf_extraction_target: "< 30 seconds"
+
+# Success Criteria (SC-002, SC-003, SC-004)
+success_criteria:
+  section_mapping_coverage: 1.0  # 100% of sections mapped (SC-002)
+  link_validation_success: 1.0   # Zero broken links (SC-003)
+  feature_extraction_accuracy: 0.7  # ≥70% accuracy (SC-004)
