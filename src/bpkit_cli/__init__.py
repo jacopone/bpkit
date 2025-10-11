@@ -9,6 +9,8 @@ import sys
 from typing import Optional
 
 import typer
+from click import Context
+from click.formatting import HelpFormatter
 from rich.console import Console
 from rich.panel import Panel
 
@@ -20,7 +22,7 @@ console = Console()
 class BannerGroup(typer.core.TyperGroup):
     """Custom Typer group that displays banner before help text"""
 
-    def format_help(self, ctx: typer.Context, formatter: typer.core.HelpFormatter) -> None:
+    def format_help(self, ctx: Context, formatter: HelpFormatter) -> None:
         banner = """
 ╔══════════════════════════════════════════════════════════════╗
 ║              BP-Kit: Business Plan to Constitution           ║
