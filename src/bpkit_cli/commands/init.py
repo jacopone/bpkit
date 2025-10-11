@@ -25,7 +25,7 @@ console = Console()
 
 
 # Template definitions from contracts/github-raw-api.yaml
-TEMPLATE_BASE_URL = "https://raw.githubusercontent.com/yourusername/bp-kit/main"
+TEMPLATE_BASE_URL = "https://raw.githubusercontent.com/jacopone/bpkit/003-implement-bp-decompose"
 
 TEMPLATES = [
     Template(
