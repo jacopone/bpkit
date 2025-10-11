@@ -6,7 +6,9 @@ from typing import Optional
 import typer
 from pydantic import HttpUrl
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.tree import Tree
 
 from ..core import (
     InstallationError,
@@ -189,8 +191,6 @@ def create_directories(project_dir: Path, tracker) -> None:
                 "Please check disk space and file system permissions."
             ) from e
 
-        console.print(f"[green]✓[/green] Created {dir_path_str}/")
-
 
 def install_templates(project_dir: Path, tracker, project_name: Optional[str] = None) -> None:
     """Download and install BP-Kit templates.
@@ -255,16 +255,6 @@ def install_templates(project_dir: Path, tracker, project_name: Optional[str] = 
 
             progress.update(task, completed=True)
 
-    # Display summary of what was installed
-    console.print("\n[bold]Installed templates:[/bold]")
-    for template in TEMPLATES:
-        if template.type == TemplateType.MARKDOWN:
-            console.print(f"  [green]✓[/green] {template.name}")
-        elif template.type == TemplateType.SLASH_COMMAND:
-            console.print(f"  [green]✓[/green] Slash command: /{template.name[:-3]}")
-        elif template.type == TemplateType.BASH_SCRIPT:
-            console.print(f"  [green]✓[/green] Bash utility: {template.name}")
-
 
 def display_summary(project_name: Optional[str] = None) -> None:
     """Display installation summary and next steps.
@@ -280,6 +270,21 @@ def display_summary(project_name: Optional[str] = None) -> None:
     console.print("  3. Verify installation: bpkit check")
 
     console.print("\\n[dim]Documentation: https://github.com/yourusername/bp-kit#readme[/dim]")
+
+
+def display_banner() -> None:
+    """Display BP-Kit banner."""
+    banner = """
+    ██████╗ ██████╗       ██╗  ██╗██╗████████╗
+    ██╔══██╗██╔══██╗      ██║ ██╔╝██║╚══██╔══╝
+    ██████╔╝██████╔╝█████╗█████╔╝ ██║   ██║
+    ██╔══██╗██╔═══╝ ╚════╝██╔═██╗ ██║   ██║
+    ██████╔╝██║           ██║  ██╗██║   ██║
+    ╚═════╝ ╚═╝           ╚═╝  ╚═╝╚═╝   ╚═╝
+
+    Business Plan to Constitution - Spec-Driven MVP Development
+    """
+    console.print(banner, style="bold cyan")
 
 
 def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
@@ -302,6 +307,9 @@ def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
     """
     project_dir = Path.cwd()
 
+    # Display banner
+    display_banner()
+
     # Detect existing installations
     has_speckit = is_speckit_project(project_dir)
     has_bpkit = is_bpkit_installed(project_dir)
@@ -309,28 +317,47 @@ def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
     # Check for conflicts (informational only - BP-Kit won't overwrite Speckit files)
     conflicts = check_speckit_conflicts(project_dir)
     if conflicts and not force:
-        console.print("[yellow]Note: Speckit files detected (will not be modified):[/yellow]")
+        console.print("\n[yellow]Note: Speckit files detected (will not be modified):[/yellow]")
         for conflict in conflicts:
             console.print(f"  [dim]{conflict}[/dim]")
-        console.print()
 
     # If BP-Kit already installed, prompt for overwrite
-    if has_bpkit:
+    if has_bpkit and not force:
+        console.print()
         if not prompt_overwrite(force):
             console.print("\\nInstallation cancelled. No changes made.")
             console.print("\\n[dim]To force overwrite, run: bpkit init --force[/dim]")
             raise typer.Exit(2)
 
-    # Begin atomic installation
+    # Display project setup panel
+    if not project_name:
+        project_name = project_dir.name
+
+    setup_panel = Panel(
+        f"\n  [bold]BP-Kit Project Setup[/bold]\n\n"
+        f"  Project         {project_name}\n"
+        f"  Working Path    {project_dir}\n",
+        expand=False
+    )
+    console.print()
+    console.print(setup_panel)
+
+    # Begin atomic installation with progress tree
+    console.print()
+    tree = Tree("Initialize BP-Kit Project")
+
     try:
         with atomic_installation() as tracker:
             # Create directory structure
+            tree.add("● Create directory structure")
             create_directories(project_dir, tracker)
 
             # Download and install templates
+            tree.add("● Download and install templates")
             install_templates(project_dir, tracker, project_name)
 
             # Create README placeholders
+            tree.add("● Create README placeholders")
             readme_dirs = [
                 ".specify/deck",
                 ".specify/features",
@@ -347,25 +374,53 @@ def run_init(project_name: Optional[str] = None, force: bool = False) -> None:
             if not has_git:
                 # No Git detected - prompt user
                 if prompt_gitignore(force):
+                    tree.add("● Create .gitignore")
                     create_or_append_gitignore(project_dir, tracker)
             else:
                 # Git exists - always add/update .gitignore
+                tree.add("● Update .gitignore")
                 create_or_append_gitignore(project_dir, tracker)
 
-            # Display success message
-            if not has_speckit:
-                # New project (US2) - show welcome message
-                console.print("\\n[bold green]✨ BP-Kit successfully installed![/bold green]")
-                console.print("\\n[bold]Welcome to BP-Kit![/bold]")
-                console.print("\\nYou've created a new project with both Speckit and BP-Kit.")
-                console.print("\\n[bold]Next steps:[/bold]")
-                console.print("  1. Create your pitch deck: .specify/deck/pitch-deck.md")
-                console.print("  2. Run decomposition: /bp.decompose --interactive")
-                console.print("  3. Build features with Speckit workflow")
-                console.print("\\n[dim]Documentation: https://github.com/yourusername/bp-kit#readme[/dim]")
-            else:
-                # Existing Speckit project (US1) - standard summary
-                display_summary(project_name)
+            tree.add("● Finalize (project ready)")
+
+        # Display tree after successful installation
+        console.print(tree)
+        console.print("\n[bold green]Project ready.[/bold green]\n")
+
+        # Display next steps panel
+        if not has_speckit:
+            # New project (US2) - show welcome message
+            next_steps = Panel(
+                "\n  [bold]Welcome to BP-Kit![/bold]\n\n"
+                "  1. Create your pitch deck in .specify/deck/pitch-deck.md\n"
+                "  2. Run: bpkit decompose --interactive\n"
+                "  3. Build features with Speckit workflow\n",
+                title="Next Steps",
+                expand=False
+            )
+        else:
+            # Existing Speckit project (US1) - integration steps
+            next_steps = Panel(
+                "\n  1. Create your pitch deck: .specify/deck/pitch-deck.md\n"
+                "  2. Run decomposition: bpkit decompose --interactive\n"
+                "  3. Use /bp.decompose slash command in Claude Code\n"
+                "  4. Integrate with Speckit: /speckit.plan --constitution features/*.md\n",
+                title="Next Steps",
+                expand=False
+            )
+
+        console.print(next_steps)
+
+        # Optional commands panel
+        optional_panel = Panel(
+            "\n  ○ bpkit check - Verify installation\n"
+            "  ○ bpkit decompose --help - See all decomposition options\n"
+            "  ○ bpkit analyze - Validate constitutional consistency\n",
+            title="Optional Commands",
+            expand=False
+        )
+        console.print()
+        console.print(optional_panel)
 
     except InstallationError as e:
         # Rollback already happened in atomic_installation context manager
