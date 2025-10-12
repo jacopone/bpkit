@@ -65,6 +65,24 @@ TEMPLATES = [
         type=TemplateType.SLASH_COMMAND,
     ),
     Template(
+        name="bp.analyze.md",
+        source_url=HttpUrl(f"{TEMPLATE_BASE_URL}/.claude/commands/bp.analyze.md"),
+        destination_path=Path(".claude/commands/bp.analyze.md"),
+        type=TemplateType.SLASH_COMMAND,
+    ),
+    Template(
+        name="bp.clarify.md",
+        source_url=HttpUrl(f"{TEMPLATE_BASE_URL}/.claude/commands/bp.clarify.md"),
+        destination_path=Path(".claude/commands/bp.clarify.md"),
+        type=TemplateType.SLASH_COMMAND,
+    ),
+    Template(
+        name="bp.checklist.md",
+        source_url=HttpUrl(f"{TEMPLATE_BASE_URL}/.claude/commands/bp.checklist.md"),
+        destination_path=Path(".claude/commands/bp.checklist.md"),
+        type=TemplateType.SLASH_COMMAND,
+    ),
+    Template(
         name="bp-common.sh",
         source_url=HttpUrl(f"{TEMPLATE_BASE_URL}/.specify/scripts/bp/bp-common.sh"),
         destination_path=Path(".specify/scripts/bp/bp-common.sh"),

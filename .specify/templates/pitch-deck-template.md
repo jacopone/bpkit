@@ -1,10 +1,10 @@
 ---
 version: "1.0.0"
 type: pitch-deck
-project: [PROJECT_NAME]
+project: bpkit
 ---
 
-# [PROJECT_NAME] Pitch Deck
+# bpkit Pitch Deck
 
 ## Problem
 <!-- Describe the problem you're solving -->

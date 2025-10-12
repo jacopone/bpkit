@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 type: feature
-project: [PROJECT_NAME]
+project: bpkit
 source: pitch-deck.md
 ---
 

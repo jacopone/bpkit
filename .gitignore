@@ -46,3 +46,6 @@ htmlcov/
 # Nix
 result
 result-*
+
+# BP-Kit: Exclude pitch deck PDFs
+.specify/deck/*.pdf
